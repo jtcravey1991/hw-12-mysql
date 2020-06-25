@@ -8,7 +8,7 @@ require("console.table")
 //     port: 3306,
 //     user: "root",
 //     password: "admin",
-//     database: ""
+//     database: "employee_tracker"
 // });
 
 // connect and start main program
@@ -43,7 +43,7 @@ async function main() {
 
 // Global Functions ---------------------------------------------------------------------------------- ||
 function getEmployees() {
-    
+
 }
 
 // Employee Menu Funtions ---------------------------------------------------------------------------- ||
