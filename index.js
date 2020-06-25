@@ -220,6 +220,22 @@ async function addDepartment() {
     }
 }
 
-function deleteDepartment() {
+async function deleteDepartment() {
+    connection.query("SELECT name FROM departments", async function(err, res) {
+        if (err) throw err;
+        const departments = res.map(a => a.name);
 
+        const response = await inquirer.prompt({
+            type: "list",
+            name: "department",
+            message: "Which department would you like to delete?",
+            choices: departments
+        })
+
+        connection.query(`DELETE FROM departments WHERE name = '${response.department}'`, function(err2, res2) {
+            if (err2) throw err2;
+            console.log("Department successfully deleted.")
+            departmentMenu();
+        })
+    })
 }
