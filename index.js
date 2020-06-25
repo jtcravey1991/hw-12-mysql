@@ -154,14 +154,43 @@ async function roleMenu() {
 }
 
 function viewRoles() {
-    connection.query("SELECT title AS Roles FROM roles", function (err, res) {
+    connection.query("SELECT roles.title AS Role, departments.name AS Department FROM roles LEFT JOIN departments on roles.department_id = departments.id;", function (err, res) {
         console.table(res);
         roleMenu();
     });
 }
 
 function addRole() {
+    connection.query("SELECT * FROM departments", async function (err, res) {
+        if (err) throw err;
+        const departments = res.map(a => a.name);
 
+        const response = await inquirer.prompt([{
+            type: "list",
+            name: "department",
+            message: "Which department is this role in?",
+            choices: departments
+        },
+        {
+            type: "input",
+            name: "role",
+            message: "What would you like to name the new role?"
+        },
+        {
+            type: "input",
+            name: "salary",
+            message: "What is this role's salary?"
+        }
+        ])
+
+        const index = departments.indexOf(response.department);
+        
+        connection.query(`INSERT INTO roles (title, salary, department_id) VALUES ('${response.role}', '${response.salary}', '${res[index].id}');`, function(err2, res2) {
+            if (err2) throw err2;
+            console.log(`${response.role} Role has been successfully created.`);
+            roleMenu();
+        })
+    });
 }
 
 function deleteRole() {
