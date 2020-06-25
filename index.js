@@ -193,8 +193,25 @@ function addRole() {
     });
 }
 
-function deleteRole() {
+async function deleteRole() {
+    connection.query("SELECT * FROM roles", async function(err, res) {
+        if (err) throw err;
+        const roles = res.map(a => a.title);
+    
+        const response = await inquirer.prompt({
+            type: "list",
+            name: "role",
+            message: "Which role would you like to delete?",
+            choices: roles
+        })
 
+        const index = roles.indexOf(response.role);
+
+        connection.query(`DELETE FROM roles WHERE id = '${res[index].id}'`, function (err2, res2) {
+            if (err2) throw err2;
+            console.log(`${response.role} role was successfully deleted.`);
+        });
+    })
 }
 
 // Department Menu Functions ------------------------------------------- ||
@@ -223,7 +240,7 @@ async function departmentMenu() {
 }
 
 function viewDepartments() {
-    connection.query("SELECT name AS Departments FROM departments", function (err, res) {
+    connection.query("SELECT name AS Departments FROM departments;", function (err, res) {
         console.table(res);
         departmentMenu();
     })
@@ -250,7 +267,7 @@ async function addDepartment() {
 }
 
 async function deleteDepartment() {
-    connection.query("SELECT name FROM departments", async function (err, res) {
+    connection.query("SELECT name FROM departments;", async function (err, res) {
         if (err) throw err;
         const departments = res.map(a => a.name);
 
@@ -261,7 +278,7 @@ async function deleteDepartment() {
             choices: departments
         })
 
-        connection.query(`DELETE FROM departments WHERE name = '${response.department}'`, function (err2, res2) {
+        connection.query(`DELETE FROM departments WHERE name = '${response.department}';`, function (err2, res2) {
             if (err2) throw err2;
             console.log("Department successfully deleted.")
             departmentMenu();
