@@ -14,7 +14,7 @@ var connection = mysql.createConnection({
 // connect and start main program
 connection.connect(err => {
     if (err) throw err;
-    roleMenu();
+    employeeMenu();
 })
 
 // main program
@@ -40,14 +40,6 @@ async function main() {
             departmentMenu();
             break;
     }
-}
-
-// Global Functions ---------------------------------------------------------------------------------- ||
-function getEmployees() {
-    connection.query("SELECT * FROM employees", function (err, res) {
-        if (err) throw err;
-        console.table(res);
-    })
 }
 
 // Employee Menu Funtions ---------------------------------------------------------------------------- ||
@@ -83,7 +75,15 @@ async function employeeMenu() {
 }
 
 function viewAllEmployees() {
-
+    connection.query(
+        `SELECT employees.first_name AS First_Name, employees.last_name AS Last_Name, roles.title AS Role, departments.name AS Department FROM employees
+        LEFT JOIN roles on employees.role_id = roles.id
+        LEFT JOIN departments on roles.department_id = departments.id`, 
+        function (err, res) {
+            console.log("Employees:");
+            console.table(res);
+            employeeMenu();
+        })
 }
 
 async function viewEmployeesByManager() {
