@@ -14,7 +14,7 @@ var connection = mysql.createConnection({
 // connect and start main program
 connection.connect(err => {
     if (err) throw err;
-    viewDepartments();
+    roleMenu();
 })
 
 // main program
@@ -44,7 +44,7 @@ async function main() {
 
 // Global Functions ---------------------------------------------------------------------------------- ||
 function getEmployees() {
-    connection.query("SELECT * FROM employees", function(err, res) {
+    connection.query("SELECT * FROM employees", function (err, res) {
         if (err) throw err;
         console.table(res);
     })
@@ -154,18 +154,18 @@ async function roleMenu() {
 }
 
 function viewRoles() {
-
-    roleMenu();
+    connection.query("SELECT title AS Roles FROM roles", function (err, res) {
+        console.table(res);
+        roleMenu();
+    });
 }
 
 function addRole() {
 
-    roleMenu();
 }
 
 function deleteRole() {
 
-    roleMenu();
 }
 
 // Department Menu Functions ------------------------------------------- ||
@@ -194,7 +194,7 @@ async function departmentMenu() {
 }
 
 function viewDepartments() {
-    connection.query("SELECT name AS Department FROM departments", function(err, res) {
+    connection.query("SELECT name AS Departments FROM departments", function (err, res) {
         console.table(res);
         departmentMenu();
     })
@@ -208,7 +208,7 @@ async function addDepartment() {
     });
 
     if (response.department) {
-        connection.query(`INSERT INTO departments (name) VALUES ('${response.department}');`, function(err, res) {
+        connection.query(`INSERT INTO departments (name) VALUES ('${response.department}');`, function (err, res) {
             if (err) throw err;
             console.log(`${response.department} Department successfully added`);
             departmentMenu();
@@ -221,7 +221,7 @@ async function addDepartment() {
 }
 
 async function deleteDepartment() {
-    connection.query("SELECT name FROM departments", async function(err, res) {
+    connection.query("SELECT name FROM departments", async function (err, res) {
         if (err) throw err;
         const departments = res.map(a => a.name);
 
@@ -232,7 +232,7 @@ async function deleteDepartment() {
             choices: departments
         })
 
-        connection.query(`DELETE FROM departments WHERE name = '${response.department}'`, function(err2, res2) {
+        connection.query(`DELETE FROM departments WHERE name = '${response.department}'`, function (err2, res2) {
             if (err2) throw err2;
             console.log("Department successfully deleted.")
             departmentMenu();
