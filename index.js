@@ -1,26 +1,27 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
-require("console.table")
+require("console.table");
 
 // create connection to employee database
-// var connection = mysql.createConnection({
-//     host: "localhost",
-//     port: 3306,
-//     user: "root",
-//     password: "admin",
-//     database: "employee_tracker"
-// });
+var connection = mysql.createConnection({
+    host: "localhost",
+    port: 3306,
+    user: "root",
+    password: "admin",
+    database: "employee_tracker"
+});
 
 // connect and start main program
-// connection.connect(err => {
-//     if (err) throw err;
-//     main();
-// })
-
-main();
+connection.connect(err => {
+    if (err) throw err;
+    viewDepartments();
+})
 
 // main program
 async function main() {
+    await getEmployees();
+    console.table(test);
+
     const response = await inquirer.prompt({
         type: "list",
         name: "action",
@@ -43,7 +44,10 @@ async function main() {
 
 // Global Functions ---------------------------------------------------------------------------------- ||
 function getEmployees() {
-
+    connection.query("SELECT * FROM employees", function(err, res) {
+        if (err) throw err;
+        console.table(res);
+    })
 }
 
 // Employee Menu Funtions ---------------------------------------------------------------------------- ||
@@ -123,11 +127,99 @@ async function updateEmployeeManager() {
 
 }
 
-// Role 
+// Role Menu Functions -------------------------------------------------- ||
 async function roleMenu() {
+    const response = await inquirer.prompt({
+        type: "list",
+        name: "action",
+        message: "What would you like to do?",
+        choices: ["View Roles", "Add Role", "Delete Role", "Go Back"]
+    })
+
+    switch (response.action) {
+        case "View Roles":
+            viewRoles();
+            break;
+        case "Add Role":
+            addRole();
+            break;
+        case "Delete Role":
+            deleteRole();
+            break;
+        default:
+            main();
+            break;
+    }
 
 }
 
+function viewRoles() {
+
+    roleMenu();
+}
+
+function addRole() {
+
+    roleMenu();
+}
+
+function deleteRole() {
+
+    roleMenu();
+}
+
+// Department Menu Functions ------------------------------------------- ||
 async function departmentMenu() {
+    const response = await inquirer.prompt({
+        type: "list",
+        name: "action",
+        message: "What would you like to do?",
+        choices: ["View Departments", "Add a Department", "Delete a Department", "Go Back"]
+    })
+
+    switch (response.action) {
+        case "View Departments":
+            viewDepartments();
+            break;
+        case "Add a Department":
+            addDepartment();
+            break;
+        case "Delete a Department":
+            deleteDepartment();
+            break;
+        default:
+            main();
+            break;
+    }
+}
+
+function viewDepartments() {
+    connection.query("SELECT name AS Department FROM departments", function(err, res) {
+        console.table(res);
+        departmentMenu();
+    })
+}
+
+async function addDepartment() {
+    const response = await inquirer.prompt({
+        type: "input",
+        name: "department",
+        message: "What would you like to name the new department?"
+    });
+
+    if (response.department) {
+        connection.query(`INSERT INTO departments (name) VALUES ('${response.department}');`, function(err, res) {
+            if (err) throw err;
+            console.log(`${response.department} Department successfully added`);
+            departmentMenu();
+        })
+    }
+    else {
+        console.log("Please enter a name for the department");
+        addDepartment();
+    }
+}
+
+function deleteDepartment() {
 
 }
