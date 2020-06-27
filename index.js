@@ -38,7 +38,6 @@ async function main() {
             break;
         default:
             process.exit();
-            break;
     }
 }
 
@@ -320,6 +319,7 @@ async function deleteRole() {
         connection.query(`DELETE FROM roles WHERE id = '${res[index].id}'`, function (err2, res2) {
             if (err2) throw err2;
             console.log(`${response.role} role was successfully deleted.`);
+            roleMenu();
         });
     })
 }
