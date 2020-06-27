@@ -19,14 +19,11 @@ connection.connect(err => {
 
 // main program
 async function main() {
-    await getEmployees();
-    console.table(test);
-
     const response = await inquirer.prompt({
         type: "list",
         name: "action",
         message: "Select a menu:",
-        choices: ["Employee Menu", "Roles Menu", "Departments Menu"]
+        choices: ["Employee Menu", "Roles Menu", "Departments Menu", "Exit"]
     })
 
     switch (response.action) {
@@ -39,6 +36,9 @@ async function main() {
         case "Departments Menu":
             departmentMenu();
             break;
+        default:
+            process.exit();
+            break;
     }
 }
 
@@ -49,7 +49,7 @@ async function employeeMenu() {
         type: "list",
         name: "action",
         message: "What would you like to do?",
-        choices: ["View All Employees", "View Employees By Manager", "Add Employee", "Delete Employee", "Update Employee", "Go Back"]
+        choices: ["View All Employees", "View Employees By Manager", "Add Employee", "Delete Employee", "Go Back"]
     })
 
     switch (response.action) {
@@ -156,10 +156,10 @@ async function addEmployee() {
                         }
                     }
                     connection.query(
-                        `SELECT CONCAT(first_name, " ", last_name) as name FROM employees ORDER BY id;`,
+                        `SELECT CONCAT(first_name, " ", last_name) as name, id FROM employees ORDER BY id;`,
                         async function (err3, rawManagers) {
                             if (err3) throw err3;
-                            const managers = rawManagers.map(a => a.name);
+                            const managers = ["none", ...rawManagers.map(a => a.name)];
                             const response = await inquirer.prompt([
                                 {
                                     type: "list",
@@ -178,10 +178,31 @@ async function addEmployee() {
                                     message: "Enter the employees last name"
                                 }
                             ])
-                            mIndex = managers.indexOf(response.manager);
+
+                            let mIndex = null;
+                            for (let i = 0; i < rawManagers.length; i++) {
+                                if (rawManagers[i].name = response.manager) {
+                                    mIndex = i;
+                                }
+                            }
+
+                            let insert = `INSERT INTO employees(first_name, last_name, role_id`;
+                            if (mIndex === null) {
+                                insert += `)`
+                            }
+                            else {
+                                insert += `, manager_id)`
+                            }
+                            let values = `VALUES ('${response.first_name}', '${response.last_name}', '${rawRoles[rIndex].id}'`
+                            if (mIndex === null) {
+                                values += `)`;
+                            }
+                            else {
+                                values += `, '${rawManagers[mIndex].id}')`
+                            }
+                            const completeInsert = insert + ` ` + values;
                             connection.query(
-                                `INSERT INTO employees(first_name, last_name, role_id, manager_id)
-                                VALUES ('${response.first_name}', '${response.last_name}', '${rIndex + 1}', '${mIndex + 1}')`,
+                                completeInsert,
                                 function(err4, res) {
                                     if (err4) throw err4;
                                     console.log(`${response.first_name} ${response.last_name} successfully added as an employee.`);
@@ -211,6 +232,7 @@ async function deleteEmployee() {
         connection.query(`DELETE FROM employees WHERE id = '${res[index].id}'`, function (err2, res2) {
             if (err2) throw err2;
             console.log(`${response.employee} was successfully deleted.`);
+            employeeMenu();
         });
     })
 }
