@@ -103,7 +103,14 @@ async function viewEmployeesByManager() {
                 choices: managers
             })
 
-            const index = managers.indexOf(response.manager);
+            let index = null;
+
+            for (let i = 0; i < res.length; i++) {
+                if (res[i].manager === response.manager) {
+                    index = i;
+                    break;
+                }
+            }
 
             connection.query(
                 `SELECT employees.first_name AS First_Name, employees.last_name AS Last_Name, roles.title AS Role, departments.name AS Department, roles.salary As Salary, CONCAT(managers.first_name, " ", managers.last_name) AS Manager FROM employees
