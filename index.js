@@ -79,8 +79,9 @@ function viewAllEmployees() {
         `SELECT employees.first_name AS First_Name, employees.last_name AS Last_Name, roles.title AS Role, departments.name AS Department, roles.salary As Salary, CONCAT(managers.first_name, " ", managers.last_name) AS Manager FROM employees
         LEFT JOIN roles ON employees.role_id = roles.id
         LEFT JOIN departments ON roles.department_id = departments.id
-        LEFT JOIN employees AS managers ON employees.manager_id = managers.id`, 
+        LEFT JOIN employees AS managers ON employees.manager_id = managers.id`,
         function (err, res) {
+            if (err) throw err;
             console.log("Employees:");
             console.table(res);
             employeeMenu();
@@ -88,7 +89,35 @@ function viewAllEmployees() {
 }
 
 async function viewEmployeesByManager() {
+    connection.query(
+        `SELECT CONCAT(employees.first_name, " ", employees.last_name) AS manager, employees.id AS id FROM employees
+        INNER JOIN employees AS underling ON employees.id = underling.manager_id;`,
+        async function (err, res) {
+            if (err) throw err;
+            const managers = [...new Set(res.map(a => a.manager))];
+            
+            const response = await inquirer.prompt({
+                type: "list",
+                name: "manager",
+                message: "Select a manager to view their employees.",
+                choices: managers
+            })
 
+            const index = managers.indexOf(response.manager);
+
+            connection.query(
+                `SELECT employees.first_name AS First_Name, employees.last_name AS Last_Name, roles.title AS Role, departments.name AS Department, roles.salary As Salary, CONCAT(managers.first_name, " ", managers.last_name) AS Manager FROM employees
+                LEFT JOIN roles ON employees.role_id = roles.id
+                LEFT JOIN departments ON roles.department_id = departments.id
+                LEFT JOIN employees AS managers ON employees.manager_id = managers.id
+                WHERE employees.manager_id = ${res[index].id}`,
+                function (err2, res2) {
+                    if (err2) throw err2;
+                    console.log(`Employees managed by ${response.manager}:`)
+                    console.table(res2);
+                    employeeMenu();
+                })
+        });
 }
 
 async function addEmployee() {
@@ -96,7 +125,7 @@ async function addEmployee() {
 }
 
 async function deleteEmployee() {
-    
+
 }
 
 async function updateEmployee() {
@@ -185,8 +214,8 @@ function addRole() {
         ])
 
         const index = departments.indexOf(response.department);
-        
-        connection.query(`INSERT INTO roles (title, salary, department_id) VALUES ('${response.role}', '${response.salary}', '${res[index].id}');`, function(err2, res2) {
+
+        connection.query(`INSERT INTO roles (title, salary, department_id) VALUES ('${response.role}', '${response.salary}', '${res[index].id}');`, function (err2, res2) {
             if (err2) throw err2;
             console.log(`${response.role} Role has been successfully created.`);
             roleMenu();
@@ -195,10 +224,10 @@ function addRole() {
 }
 
 async function deleteRole() {
-    connection.query("SELECT * FROM roles", async function(err, res) {
+    connection.query("SELECT * FROM roles", async function (err, res) {
         if (err) throw err;
         const roles = res.map(a => a.title);
-    
+
         const response = await inquirer.prompt({
             type: "list",
             name: "role",
