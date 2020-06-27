@@ -14,7 +14,7 @@ var connection = mysql.createConnection({
 // connect and start main program
 connection.connect(err => {
     if (err) throw err;
-    employeeMenu();
+    main();
 })
 
 // main program
@@ -64,9 +64,6 @@ async function employeeMenu() {
             break;
         case "Delete Employee":
             deleteEmployee();
-            break;
-        case "Update Employee":
-            updateEmployee();
             break;
         default:
             main();
@@ -128,40 +125,94 @@ async function viewEmployeesByManager() {
 }
 
 async function addEmployee() {
-
+    connection.query(
+        `SELECT * FROM departments ORDER BY id`,
+        async function (err, rawDepartments) {
+            if (err) throw err;
+            const departments = rawDepartments.map(a => a.name);
+            const responseDep = await inquirer.prompt({
+                type: "list",
+                name: "department",
+                message: "Which department is this employee in?",
+                choices: departments
+            })
+            dIndex = departments.indexOf(responseDep.department);
+            connection.query(
+                `SELECT * FROM roles WHERE department_id = ${rawDepartments[dIndex].id} ORDER BY id`,
+                async function (err2, rawRoles) {
+                    if (err2) throw err2;
+                    const roles = rawRoles.map(a => a.title);
+                    const responseRole = await inquirer.prompt({
+                        type: "list",
+                        name: "role",
+                        message: "Select employee's role",
+                        choices: roles
+                    })
+                    let rIndex = null;
+                    for (let i = 0; i < rawRoles.length; i++) {
+                        if (rawRoles[i].title === responseRole.role) {
+                            rIndex = i;
+                            break;
+                        }
+                    }
+                    connection.query(
+                        `SELECT CONCAT(first_name, " ", last_name) as name FROM employees ORDER BY id;`,
+                        async function (err3, rawManagers) {
+                            if (err3) throw err3;
+                            const managers = rawManagers.map(a => a.name);
+                            const response = await inquirer.prompt([
+                                {
+                                    type: "list",
+                                    name: "manager",
+                                    message: "Select the employee's manager.",
+                                    choices: managers
+                                },
+                                {
+                                    type: "input",
+                                    name: "first_name",
+                                    message: "Enter the employees first name"
+                                },
+                                {
+                                    type: "input",
+                                    name: "last_name",
+                                    message: "Enter the employees last name"
+                                }
+                            ])
+                            mIndex = managers.indexOf(response.manager);
+                            connection.query(
+                                `INSERT INTO employees(first_name, last_name, role_id, manager_id)
+                                VALUES ('${response.first_name}', '${response.last_name}', '${rIndex + 1}', '${mIndex + 1}')`,
+                                function(err4, res) {
+                                    if (err4) throw err4;
+                                    console.log(`${response.first_name} ${response.last_name} successfully added as an employee.`);
+                                    employeeMenu();
+                                }
+                            )
+                        }
+                    )
+                })
+        })
 }
 
 async function deleteEmployee() {
+    connection.query(`SELECT CONCAT(first_name, " ", last_name) as name, id FROM employees ORDER BY id`, async function (err, res) {
+        if (err) throw err;
+        const employees = res.map(a => a.name);
 
-}
+        const response = await inquirer.prompt({
+            type: "list",
+            name: "employee",
+            message: "Which employee would you like to delete?",
+            choices: employees
+        })
 
-async function updateEmployee() {
-    const response = await inquirer.prompt({
-        type: "list",
-        name: "action",
-        message: "What would you like to update?",
-        choices: ["Employee Role", "Employee Manager", "Go Back"]
+        const index = employees.indexOf(response.employee);
+
+        connection.query(`DELETE FROM employees WHERE id = '${res[index].id}'`, function (err2, res2) {
+            if (err2) throw err2;
+            console.log(`${response.employee} was successfully deleted.`);
+        });
     })
-
-    switch (response.action) {
-        case "Employee Role":
-            updateEmployeeRole();
-            break;
-        case "Employee Manager":
-            updateEmployeeManager();
-            break;
-        default:
-            employeeMenu();
-            break;
-    }
-}
-
-async function updateEmployeeRole() {
-
-}
-
-async function updateEmployeeManager() {
-
 }
 
 // Role Menu Functions -------------------------------------------------- ||
