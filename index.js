@@ -76,9 +76,10 @@ async function employeeMenu() {
 
 function viewAllEmployees() {
     connection.query(
-        `SELECT employees.first_name AS First_Name, employees.last_name AS Last_Name, roles.title AS Role, departments.name AS Department FROM employees
-        LEFT JOIN roles on employees.role_id = roles.id
-        LEFT JOIN departments on roles.department_id = departments.id`, 
+        `SELECT employees.first_name AS First_Name, employees.last_name AS Last_Name, roles.title AS Role, departments.name AS Department, roles.salary As Salary, CONCAT(managers.first_name, " ", managers.last_name) AS Manager FROM employees
+        LEFT JOIN roles ON employees.role_id = roles.id
+        LEFT JOIN departments ON roles.department_id = departments.id
+        LEFT JOIN employees AS managers ON employees.manager_id = managers.id`, 
         function (err, res) {
             console.log("Employees:");
             console.table(res);
@@ -95,7 +96,7 @@ async function addEmployee() {
 }
 
 async function deleteEmployee() {
-
+    
 }
 
 async function updateEmployee() {
